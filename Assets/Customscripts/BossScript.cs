@@ -38,6 +38,7 @@ public class BossScript : MonoBehaviour
     private bool _pulling;
     private Stone _stone;
     private Rigidbody _playerRigidBody;
+    private JUCharacterController _characterController;
 
     void Start()
     {
@@ -46,6 +47,7 @@ public class BossScript : MonoBehaviour
         {
             _playerHealth = player.GetComponent<JUHealth>();
             _playerRigidBody = player.GetComponent<Rigidbody>();
+            _characterController = player.GetComponent<JUCharacterController>();
         }
         else
         {
@@ -122,16 +124,21 @@ public class BossScript : MonoBehaviour
         _bossHealth.OnUnitDeath -= OnBossDeath;
     }
 
-    void Update()
+    private void FixedUpdate()
     {
         if (_pulling)
         {
             var playerTransform = _playerHealth.transform;
             var bossPosition = new Vector3(transform.position.x, playerTransform.position.y, transform.position.z);
-            var pullDirection = bossPosition - playerTransform.position;
-            _playerRigidBody.AddForce(pullDirection * _bossPullingForce);
+            var pullDirection = (bossPosition - playerTransform.position).normalized;
+            var force = pullDirection * _bossPullingForce * 100f;
+            force *= (float)(_characterController.IsGrounded ? 1 : 0.01); 
+            _playerRigidBody.AddForce(force);
         }
-        
+    }
+
+    void Update()
+    {
         Vector3 direction = _playerHealth.transform.position - transform.position;
         direction.y = 0;
 
